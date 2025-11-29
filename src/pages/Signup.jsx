@@ -25,15 +25,41 @@ export default function Signup() {
   }
 
   return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "center", height: "100vh",
-      background: "linear-gradient(135deg, var(--primary-500), var(--accent-500))", padding: 20
-    }}>
-      <form onSubmit={handleSignup} style={{
-        width: "100%", maxWidth: 420, padding: 30, background: "rgba(255,255,255,0.95)",
-        borderRadius: 16, backdropFilter: "blur(6px)", boxShadow: "0 10px 30px rgba(0,0,0,0.12)"
-      }}>
-        <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 18, textAlign: "center", color: "var(--primary-700)" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        background:
+          "radial-gradient(circle at top left, #bbf7d0 0, #f0fdf4 40%, #ecfeff 100%)",
+        padding: 20,
+        position: "relative",
+      }}
+    >
+      <form
+        onSubmit={handleSignup}
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          padding: 28,
+          background: "rgba(255,255,255,0.96)",
+          borderRadius: 18,
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 24px 45px rgba(22,163,74,0.18)",
+          marginTop: 80,
+          border: "1px solid rgba(148,163,184,0.35)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 24,
+            fontWeight: 700,
+            marginBottom: 18,
+            textAlign: "center",
+            color: "#064e3b",
+          }}
+        >
           Create Account
         </div>
 
@@ -57,10 +83,21 @@ export default function Signup() {
           </select>
         </div>
 
-        <Button variant="primary" type="submit" style={{ width: "100%", marginTop: 8 }}>Sign Up</Button>
+        <Button variant="primary" type="submit" style={{ width: "100%", marginTop: 8, borderRadius: 999 }}>Sign Up</Button>
 
         <div style={{ textAlign: "center", marginTop: 12 }}>
-          Already have an account? <Link to="/login">Login</Link>
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            style={{
+              marginLeft: 6,
+              color: "#047857",
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            Login
+          </Link>
         </div>
       </form>
     </div>

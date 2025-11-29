@@ -2,6 +2,20 @@ import React from "react";
 import Card from "../components/Card";
 import { useData } from "../context/DataContext";
 
+// Chart.js imports
+import { Bar, Pie } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+// register chart.js components
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
 function computeStats(data) {
   const forms = data.forms || [];
@@ -18,7 +32,6 @@ function computeStats(data) {
 
         formResponses.forEach((r) => {
           const raw = r.answers ? r.answers[q.id] : undefined;
-
           const val = raw === undefined || raw === null ? null : Number(raw);
 
           if (!Number.isNaN(val) && val >= 1 && val <= 5) {
@@ -46,65 +59,216 @@ export default function Results() {
 
   return (
     <div>
-      <Card title="Results & Analytics">
-        {stats.length === 0 && <div style={{ color: "var(--muted)" }}>No forms created yet.</div>}
+      <Card title="Results &amp; Analytics">
+        {stats.length === 0 && (
+          <div style={{ color: "var(--muted)" }}>No forms created yet.</div>
+        )}
 
         {stats.map((s) => (
-          <div key={s.form.id} style={{ marginBottom: 22 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div key={s.form.id} style={{ marginBottom: 24 }}>
+            {/* Form header */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
               <div>
                 <div style={{ fontWeight: 700, fontSize: 18 }}>{s.form.title}</div>
-                <div className="small" style={{ marginTop: 4 }}>{s.responses.length} responses</div>
+                <div className="small" style={{ marginTop: 4 }}>
+                  {s.responses.length} responses
+                </div>
               </div>
             </div>
 
-            <div style={{ marginTop: 14 }}>
-              {s.qstats.map((q) => (
-                <div key={q.id} style={{ marginBottom: 18 }}>
-                  <div style={{ fontWeight: 600 }}>{q.text}</div>
+            {/* Questions */}
+            <div style={{ marginTop: 16 }}>
+              {s.qstats.map((q) => {
+                if (q.type === "rating") {
+                  const labels = Object.keys(q.counts);
+                  const values = Object.values(q.counts);
+                  const total = values.reduce((a, b) => a + b, 0) || 1; // avoid 0 division
 
-                  {q.type === "rating" ? (
-                    <>
-                      <div className="small" style={{ marginBottom: 8 }}>Average: {q.avg}</div>
+                  const barData = {
+                    labels,
+                    datasets: [
+                      {
+                        label: "Number of responses",
+                        data: values,
+                        backgroundColor: "rgba(16, 185, 129, 0.8)", // Fresh green
+                        borderWidth: 0,
+                        borderRadius: 6,
+                      },
+                    ],
+                  };
 
-                      {}
-                      <div>
-                        {Object.entries(q.counts).map(([k, v]) => {
-                          const total = Object.values(q.counts).reduce((a, b) => a + b, 0);
-                          const pct = total ? Math.round((Number(v) / total) * 100) : 0;
+                  const barOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (ctx) => ` ${ctx.parsed.y} responses`,
+                        },
+                      },
+                    },
+                    scales: {
+                      x: {
+                        grid: {
+                          display: false,
+                        },
+                      },
+                      y: {
+                        beginAtZero: true,
+                        ticks: {
+                          precision: 0,
+                        },
+                      },
+                    },
+                  };
 
-                          return (
-                            <div key={k} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                              <div style={{ width: 24, fontWeight: 600 }}>{k}</div>
+                  const pieData = {
+                    labels: labels.map((l) => `Rating ${l}`),
+                    datasets: [
+                      {
+                        data: values,
+                        backgroundColor: [
+                          "rgba(5, 150, 105, 0.85)", // Darker green
+                          "rgba(16, 185, 129, 0.85)", // Main apple green
+                          "rgba(110, 231, 183, 0.85)", // Light mint
+                          "rgba(52, 211, 153, 0.85)", // Bright fresh green
+                          "rgba(167, 243, 208, 0.85)", // Very soft green
+                        ],
+                      },
+                    ],
+                  };
 
-                              <div style={{ flex: 1, background: "#eef6ff", borderRadius: 8, overflow: "hidden" }}>
-                                <div
-                                  style={{
-                                    width: `${pct}%`,
-                                    height: 14,
-                                    background: "linear-gradient(90deg,var(--primary-500),var(--accent-500))",
-                                    transition: "width .35s ease",
-                                  }}
-                                />
-                              </div>
+                  const pieOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: "bottom",
+                        labels: {
+                          boxWidth: 12,
+                          usePointStyle: true,
+                        },
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (ctx) => {
+                            const value = ctx.parsed;
+                            const pct = Math.round((value / total) * 100);
+                            return ` ${value} responses (${pct}%)`;
+                          },
+                        },
+                      },
+                    },
+                  };
 
-                              <div style={{ width: 36, textAlign: "right", fontWeight: 700 }}>{v}</div>
-                            </div>
-                          );
-                        })}
+                  return (
+                    <div
+                      key={q.id}
+                      style={{
+                        marginBottom: 22,
+                        padding: 14,
+                        borderRadius: 12,
+                        background: "#fafafa",
+                        border: "1px solid #eee",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          marginBottom: 6,
+                        }}
+                      >
+                        {q.text}
                       </div>
-                    </>
-                  ) : (
-                    <div style={{ marginTop: 8 }}>
-                      {q.texts.length === 0 ? <div className="small">No responses</div> :
-                        q.texts.map((t, i) => (
-                          <div key={i} style={{ padding: 10, background: "#fafafa", borderRadius: 8, marginBottom: 8 }}>{t}</div>
-                        ))
-                      }
+                      <div
+                        className="small"
+                        style={{ marginBottom: 10, color: "var(--muted)" }}
+                      >
+                        Average rating: <strong>{q.avg}</strong>{" "}
+                        {q.totalResponses ? `from ${q.totalResponses} responses` : ""}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)",
+                          gap: 16,
+                        }}
+                      >
+                        <div
+                          style={{
+                            minHeight: 220,
+                          }}
+                        >
+                          <Bar data={barData} options={barOptions} />
+                        </div>
+                        <div
+                          style={{
+                            minHeight: 220,
+                          }}
+                        >
+                          <Pie data={pieData} options={pieOptions} />
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
+                  );
+                }
+
+                // Text question
+                return (
+                  <div
+                    key={q.id}
+                    style={{
+                      marginBottom: 20,
+                      padding: 14,
+                      borderRadius: 12,
+                      background: "#fafafa",
+                      border: "1px solid #eee",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        marginBottom: 6,
+                      }}
+                    >
+                      {q.text}
+                    </div>
+                    <div style={{ marginTop: 6 }}>
+                      {q.texts.length === 0 ? (
+                        <div className="small" style={{ color: "var(--muted)" }}>
+                          No responses yet.
+                        </div>
+                      ) : (
+                        q.texts.map((t, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              padding: 10,
+                              background: "white",
+                              borderRadius: 8,
+                              marginBottom: 8,
+                              border: "1px solid #eee",
+                            }}
+                          >
+                            {t}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
