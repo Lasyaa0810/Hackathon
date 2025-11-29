@@ -11,10 +11,31 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
   const [error, setError] = useState("");
+  const [captcha, setCaptcha] = useState("");
+  const [captchaInput, setCaptchaInput] = useState("");
+
+  function generateCaptcha() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 6; i++) {
+      code += chars[Math.floor(Math.random() * chars.length)];
+    }
+    setCaptcha(code);
+  }
+
+  React.useEffect(() => {
+    generateCaptcha();
+  }, []);
 
   function handleSignup(e) {
     e.preventDefault();
     setError("");
+    if (captchaInput !== captcha) {
+      setError("Captcha incorrect!");
+      generateCaptcha();
+      setCaptchaInput("");
+      return;
+    }
     const res = signup(username.trim(), password.trim(), role);
     if (!res.success) {
       setError(res.message);
@@ -37,6 +58,21 @@ export default function Signup() {
         position: "relative",
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          top: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          fontFamily: "var(--font-heading)",
+          fontWeight: 700,
+          fontSize: "26px",
+          color: "#064e3b",
+          textAlign: "center",
+        }}
+      >
+        Student Feedback System
+      </div>
       <form
         onSubmit={handleSignup}
         style={{
@@ -81,6 +117,45 @@ export default function Signup() {
             <option value="user">Student / User</option>
             <option value="admin">Admin</option>
           </select>
+        </div>
+
+        <div className="form-row" style={{ marginTop: 10 }}>
+          <div className="label">Captcha</div>
+
+          <div
+            style={{
+              background: "#064e3b",
+              color: "white",
+              fontWeight: 700,
+              width: "140px",
+              textAlign: "center",
+              letterSpacing: "4px",
+              padding: "8px",
+              borderRadius: "6px",
+              fontSize: "16px",
+              userSelect: "none",
+              marginBottom: "8px",
+            }}
+          >
+            {captcha}
+          </div>
+
+          <input
+            className="input"
+            placeholder="Enter captcha"
+            value={captchaInput}
+            onChange={e => setCaptchaInput(e.target.value)}
+            required
+          />
+
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={generateCaptcha}
+            style={{ marginTop: "6px", fontSize: "12px", padding: "4px 8px" }}
+          >
+            Refresh 🔄
+          </button>
         </div>
 
         <Button variant="primary" type="submit" style={{ width: "100%", marginTop: 8, borderRadius: 999 }}>Sign Up</Button>
